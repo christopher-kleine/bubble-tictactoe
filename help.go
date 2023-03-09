@@ -42,4 +42,3 @@ func (h Help) View() string {
 
  Press any key to return to the game`
 }
-

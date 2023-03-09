@@ -5,19 +5,17 @@ import (
 	"math/big"
 )
 
-func AI(board []byte, side byte) byte {
-	nextPlayer := side%2 + 1
+func AI(board Board, player byte) (x byte, y byte) {
+	nextPlayer := player%2 + 1
 
 	// Check if the current player can win
-	for X := 0; X < 3; X++ {
-		for Y := 0; Y < 3; Y++ {
-			if board[Y*3+X] == 0 {
-				board[Y*3+X] = side
-				if id, _ := CheckStatus(board); id == side {
-					board[Y*3+X] = 0
-					return byte(Y*3 + X)
+	for _, X := range []byte{0, 1, 2} {
+		for _, Y := range []byte{0, 1, 2} {
+			if board.Get(X, Y) == 0 {
+				b, _ := board.Set(X, Y, player)
+				if id, _ := b.Status(); id == player {
+					return X, Y
 				}
-				board[Y*3+X] = 0
 			}
 		}
 	}
@@ -26,8 +24,8 @@ func AI(board []byte, side byte) byte {
 	for X := 0; X < 3; X++ {
 		for Y := 0; Y < 3; Y++ {
 			if board[Y*3+X] == 0 {
-				board[Y*3+X] = side
-				if id, _ := CheckStatus(board); id == nextPlayer {
+				board[Y*3+X] = player
+				if id, _ := board.Status(); id == nextPlayer {
 					board[Y*3+X] = 0
 					return byte(Y*3 + X)
 				}

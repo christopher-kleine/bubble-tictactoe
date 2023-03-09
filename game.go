@@ -58,7 +58,7 @@ func New(user string, parent tea.Model) tea.Model {
 		Parent:   parent,
 		User:     user,
 		Template: 0,
-		Board:    [9]byte{0, 0, 0, 0, 0, 0, 0, 0, 0},
+		Board:    Board{0, 0, 0, 0, 0, 0, 0, 0, 0},
 		Side:     1,
 	}
 
@@ -68,9 +68,9 @@ func New(user string, parent tea.Model) tea.Model {
 type Model struct {
 	Parent   tea.Model
 	User     string
-	Board    [9]byte
+	Board    Board
 	Template int
-	X, Y     int
+	X, Y     byte
 	Side     byte
 }
 
@@ -90,15 +90,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "h":
-			return Help{ Parent: m }, nil
+			return Help{Parent: m}, nil
 
 		case "t":
 			m.Template = (m.Template + 1) % len(templates)
 
 		case "enter":
-			if m.Board[m.Y*3+m.X] == 0 {
-				m.Board[m.Y*3+m.X] = m.Side
-				m.Side = m.Side % 2 + 1
+			if b, ok := m.Board.Set(m.X, m.Y, m.Side); ok {
+				m.Side = m.Side%2 + 1
+				m.Board = b
 			}
 
 		case "m":
