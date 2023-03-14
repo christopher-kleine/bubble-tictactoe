@@ -1,6 +1,7 @@
 package tictactoe
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -33,14 +34,6 @@ var (
  ╺━━╋━━━╋━━━╸
   $7 ┃ $8 ┃ $9 
     ╹   ╹    `,
-		`
-    ╥   ╥    
-  $1 ║ $2 ║ $3 
- ╞══╬═══╬═══╡
-  $4 ║ $5 ║ $6 
- ╞══╬═══╬═══╡
-  $7 ║ $8 ║ $9 
-    ╨   ╨    `,
 	}
 	chars = []string{
 		" ",
@@ -68,10 +61,11 @@ func New(user string, parent tea.Model) tea.Model {
 type Model struct {
 	Parent   tea.Model
 	User     string
-	Board    [9]byte
+	Board    Board
 	Template int
-	X, Y     int
+	X, Y     byte
 	Side     byte
+	Winner   byte
 }
 
 func (m Model) Init() tea.Cmd {
@@ -90,19 +84,43 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "h":
-			return Help{ Parent: m }, nil
+			return Help{Parent: m}, nil
 
 		case "t":
 			m.Template = (m.Template + 1) % len(templates)
 
 		case "enter":
-			if m.Board[m.Y*3+m.X] == 0 {
-				m.Board[m.Y*3+m.X] = m.Side
-				m.Side = m.Side % 2 + 1
+			if m.Winner != 0 {
+				break
 			}
+
+			var ok bool
+			m.Board, ok = m.Board.Set(m.X, m.Y, m.Side)
+			if !ok {
+				break
+			}
+			m.Side = m.Side%2 + 1
+			m.Board, m.Winner = m.Board.Status()
 
 		case "m":
 			// Call the A.I.
+			if m.Winner != 0 {
+				break
+			}
+
+			x, y, ok := m.Board.AI(m.Side)
+			if !ok {
+				break
+			}
+			m.Board, _ = m.Board.Set(x, y, m.Side)
+			m.Side = m.Side%2 + 1
+			m.Board, m.Winner = m.Board.Status()
+
+		case "n":
+			m.Board = Board{0, 0, 0, 0, 0, 0, 0, 0, 0}
+			m.X = 0
+			m.Y = 0
+			m.Winner = 0
 
 		case "up":
 			if m.Y <= 0 {
@@ -134,23 +152,37 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	board := m.Board[:]
-	board[m.Y*3+m.X] = m.Side + 4
-	return `
+	winMsg := ""
+	posIndex := m.Y*3 + m.X
+	if m.Winner == 1 {
+		winMsg = "O wins!"
+	} else if m.Winner == 2 {
+		winMsg = "X wins!"
+	} else if m.Winner == 3 {
+		winMsg = "Draw!"
+	}
+
+	return fmt.Sprintf(`
   TicTacToe
 ═════════════
 
 Press <h> to show the help.
-` + os.Expand(templates[m.Template], func(s string) string {
+
+%s
+%s`, winMsg, os.Expand(templates[m.Template], func(s string) string {
 		index, err := strconv.Atoi(s)
 		if err != nil {
 			return s
 		}
 
+		if byte(index-1) == posIndex {
+			return chars[m.Side+4]
+		}
+
 		if index >= 1 && index <= 9 {
-			return chars[board[index-1]]
+			return chars[m.Board[index-1]]
 		}
 
 		return s
-	})
+	}))
 }

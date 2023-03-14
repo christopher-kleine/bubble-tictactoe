@@ -39,7 +39,7 @@ func (h Help) View() string {
  <CTRL+C>, <q> = Quit the game
  <h>           = Show this help
  <m>           = Let the A.I. make a move
+ <n>           = Start a new game
 
  Press any key to return to the game`
 }
-
