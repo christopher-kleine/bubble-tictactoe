@@ -175,7 +175,7 @@ Press <h> to show the help.
 			return s
 		}
 
-		if byte(index-1) == posIndex {
+		if byte(index-1) == posIndex && m.Winner == 0 {
 			return chars[m.Side+4]
 		}
 
